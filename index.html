@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>写真アップロード</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #23272a;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #2c2f33;
+      padding: 32px 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+      margin-top: 60px;
+      width: 350px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 18px;
+      font-size: 1.6em;
+      letter-spacing: 1px;
+    }
+    input[type="file"] {
+      margin: 18px 0;
+      background: #23272a;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      width: 100%;
+    }
+    .preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+    .preview img {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid #7289da;
+    }
+    button {
+      background: #7289da;
+      color: #fff;
+      border: none;
+      padding: 12px 0;
+      border-radius: 8px;
+      width: 100%;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #5865f2;
+    }
+    .status {
+      margin-top: 16px;
+      font-size: 0.95em;
+      color: #43b581;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>写真アップロード</h1>
+    <form id="uploadForm">
+      <input type="file" id="photos" multiple accept="image/*">
+      <div class="preview" id="preview"></div>
+      <button type="submit">Discordに送信</button>
+    </form>
+    <div class="status" id="status"></div>
+  </div>
+  <script>
+    const webhookUrl = "https://discord.com/api/webhooks/1423991564056658021/_YqL7x_oiZxjdJFFeFGs_2zExvok1Xfgq3dAKgo9Ucx_GjyKSFk5n019PrRINMeqIqN5";
+
+    // プレビュー表示
+    document.getElementById('photos').addEventListener('change', function() {
+      const preview = document.getElementById('preview');
+      preview.innerHTML = '';
+      Array.from(this.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    // 送信処理
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const files = document.getElementById('photos').files;
+      const status = document.getElementById('status');
+      if (files.length === 0) {
+        status.textContent = "写真を選択してください。";
+        status.style.color = "#faa61a";
+        return;
+      }
+      status.textContent = "送信中...";
+      status.style.color = "#43b581";
+      let success = 0;
+      for (let i = 0; i < files.length; i++) {
+        const formData = new FormData();
+        formData.append('file', files[i]);
+        try {
+          await fetch(webhookUrl, {
+            method: 'POST',
+            body: formData
+          });
+          success++;
+        } catch (err) {
+          status.textContent = "送信に失敗しました。";
+          status.style.color = "#faa61a";
+          return;
+        }
+      }
+      status.textContent = `${success}枚の写真を送信しました！`;
+      status.style.color = "#43b581";
+      document.getElementById('uploadForm').reset();
+      document.getElementById('preview').innerHTML = '';
+    });
+  </script>
+</body>
+</html>
